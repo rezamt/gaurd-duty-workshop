@@ -1,0 +1,148 @@
+{
+  "Comment": "Snapshot AutomationState Machine",
+  "States": {
+    "Failed": {
+      "End": true,
+      "Type": "Pass"
+    },
+    "IngestionAction": {
+      "Resource": "arn:aws:lambda:REGION:ACCOUNT:function:CloudWatcherCore",
+      "ResultPath": "$.CloudWatcherCore",
+      "InputPath": "$",
+      "TimeoutSeconds": 86400,
+      "HeartbeatSeconds": 60,
+      "Next": "IngestionType",
+      "Type": "Task",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 5,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Failed",
+          "ResultPath": "$.CreateSnapshot.error"
+        }
+      ]
+    },
+    "IngestionType": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.CloudWatcherCore",
+          "StringEquals": "EmergencyActionInfrastructure",
+          "Next": "EmergencyActionInfrastructure"
+        },
+        {
+          "Variable": "$.CloudWatcherCore",
+          "StringEquals": "EmergencyActionAccount",
+          "Next": "EmergencyActionAccount"
+        },
+        {
+          "Variable": "$.CloudWatcherCore",
+          "StringEquals": "EmergencyActionApplication",
+          "Next": "EmergencyActionApplication"
+        }
+      ],
+      "Default": "EndState"
+    },
+    "EmergencyActionInfrastructure": {
+      "Resource": "arn:aws:lambda:REGION:ACCOUNT:function:EmergencyActionInfrastructure",
+      "ResultPath": "$.CloudWatcherCore",
+      "InputPath": "$",
+      "TimeoutSeconds": 86400,
+      "HeartbeatSeconds": 60,
+      "Next": "EndState",
+      "Type": "Task",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 5,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Failed",
+          "ResultPath": "$.EmergencyActionInfrastructure.error"
+        }
+      ]
+    },
+    "EmergencyActionAccount": {
+      "Resource": "arn:aws:lambda:REGION:ACCOUNT:function:EmergencyActionAccount",
+      "ResultPath": "$.CloudWatcherCore",
+      "InputPath": "$",
+      "TimeoutSeconds": 86400,
+      "HeartbeatSeconds": 60,
+      "Next": "EndState",
+      "Type": "Task",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 5,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Failed",
+          "ResultPath": "$.EmergencyActionAccount.error"
+        }
+      ]
+    },
+    "EmergencyActionApplication": {
+      "Resource": "arn:aws:lambda:REGION:ACCOUNT:function:EmergencyActionApplication",
+      "ResultPath": "$.CloudWatcherCore",
+      "InputPath": "$",
+      "TimeoutSeconds": 86400,
+      "HeartbeatSeconds": 60,
+      "Next": "EndState",
+      "Type": "Task",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 5,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "Failed",
+          "ResultPath": "$.EmergencyActionApplication.error"
+        }
+      ]
+    },
+
+    "EndState": {
+      "End": true,
+      "Type": "Pass"
+    }
+  },
+  "StartAt": "IngestionAction"
+}
